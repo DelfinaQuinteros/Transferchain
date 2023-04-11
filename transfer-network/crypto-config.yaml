@@ -1,0 +1,38 @@
+
+OrdererOrgs:
+    - Name: Orderer
+      Domain: transferchain.com
+      EnableNodeOUs: true
+      Specs:
+        - Hostname: orderer
+          SANS:
+            - localhost
+
+PeerOrgs:
+    - Name: Org1
+      Domain: org1.transferchain.com
+      EnableNodeOUs: true
+      Template:
+        Count: 1
+        SANS:
+          - localhost
+      Users:
+        Count: 2
+    - Name: Org2
+      Domain: org2.transferchain.com
+      EnableNodeOUs: true
+      Template:
+        Count: 1
+        SANS:
+          - localhost
+      Users:
+        Count: 2
+    - Name: Org3
+      Domain: org3.transferchain.com
+      EnableNodeOUs: true    
+      Template:
+        Count: 1
+        SANS:
+          - localhost
+      Users:
+        Count: 2
