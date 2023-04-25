@@ -1,45 +1,58 @@
+import hashlib
+import hmac
+import bcrypt as bcrypt
 from flask import request, jsonify, Blueprint
 import jwt
-from werkzeug.security import generate_password_hash, check_password_hash
+from main.models import User
+from main.repositories import UserRepository
 
 user = Blueprint('user', __name__)
 users = {}
+usr_report = UserRepository()
 
 
 @user.route('/register', methods=['POST'])
 def register():
-    username = request.json['username']
-    password = request.json['password']
-    role = request.json['role']
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
-    if username in users:
-        return jsonify({'error': 'El nombre de usuario ya existe.'}), 409
-
-    password_hash = generate_password_hash(password)
-
-    users[username] = {
-        'password': password_hash,
-        'role': role
-    }
-
-    return jsonify({'message': 'Usuario creado correctamente.'}), 201
+    new_user = User(
+        name=data['name'],
+        last_name=data['last_name'],
+        address=data['address'],
+        dni=data['dni'],
+        email=data['email'],
+        password=hashed_password.decode('utf-8')
+    )
+    try:
+        usr_report.create(new_user)
+        return jsonify({'message': 'Usuario creado correctamente.'}), 201
+    except:
+        return jsonify({'message': 'Error al crear usuario.'}), 500
 
 
 @user.route('/login', methods=['POST'])
 def login():
-    username = request.json['username']
-    password = request.json['password']
+    user = usr_report.find_by_username(request.json['name'])
+    if user:
+        if bcrypt.checkpw(request.json['password'].encode('utf-8'), user.password.encode('utf-8')):
+            token = jwt.encode({'name': user.name, 'email': user.email, 'role': user.role},
+                               'secret_key',
+                               algorithm='HS256')
+            return jsonify({'token': token}), 200
+        else:
+            return jsonify({'message': 'Usuario o contraseña incorrectos.'}), 401
+    else:
+        return jsonify({'message': 'Usuario o contraseña incorrectos.'}), 401
 
-    if username not in users:
-        return jsonify({'error': 'Usuario no existe.'}), 401
 
-    if not check_password_hash(users[username]['password'], password):
-        return jsonify({'error': 'Contraseña incorrecta.'}), 401
+@user.route('/users', methods=['GET'])
+def get_users():
+    users = usr_report.find_all()
+    return jsonify(users), 200
 
-    payload = {
-        'username': username,
-        'role': users[username]['role']
-    }
-    token = jwt.encode(payload, user.config['SECRET_KEY'], algorithm='HS256')
 
-    return jsonify({'token': token.decode('utf-8')})
+@user.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+    user = usr_report.find_by_id(id)
+    return jsonify(user), 200

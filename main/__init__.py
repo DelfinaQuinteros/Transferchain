@@ -18,7 +18,7 @@ def create_app():
                                             + '@' + os.getenv('DATABASE_URL') + ':' + os.getenv('DATABASE_PORT') \
                                             + '/' + os.getenv('DATABASE_NAME')
     db.init_app(app)
-    from main.resources import user
-
+    from main.resources import user, home
+    app.register_blueprint(home, url_prefix='/')
     app.register_blueprint(user, url_prefix='/api/v1')
     return app
