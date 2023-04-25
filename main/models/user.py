@@ -18,8 +18,7 @@ class User(db.Model):
     __role = Column(String(20), nullable=False, default='client')
 
     def __repr__(self):
-        return f'<User {self.__id} {self.__name} {self.__last_name} {self.__email} {self.__address} {self.__role} ' \
-               f'{self.__cars}>'
+        return f'<User {self.__name} {self.__last_name} {self.__email}>'
 
     def __init__(self, role, password, email, dni, address, last_name, name, id, cars):
         self.__car = cars

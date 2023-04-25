@@ -10,8 +10,8 @@ class UserService:
         user = self.repository.create(user)
         return user
 
-    def find_by_username(self, username: str) -> User:
-        return self.repository.find_by_username(username)
+    def find_by_username(self, name: str) -> User:
+        return self.repository.find_by_username(name)
 
     def find_by_id(self, id):
         user = self.repository.find_by_id(id)

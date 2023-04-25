@@ -19,8 +19,8 @@ class UserRepository(Create, Read, Update):
     def find_by_id(self, id: int) -> User:
         return db.session.query(self.__user).get(id)
 
-    def find_by_username(self, username:str) -> User:
-        return db.session.query(self.__user).filter(self.__user.user_name==username).first()
+    def find_by_username(self, name: str) -> User:
+        return db.session.query(self.__user).filter(self.__user.name==name).first()
 
     def update(self, user: User) -> User:
         db.session.add(user)
