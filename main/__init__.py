@@ -1,4 +1,5 @@
 import os
+from algosdk.v2client import algod, indexer
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from dotenv import load_dotenv
@@ -12,6 +13,10 @@ db = SQLAlchemy()
 def create_app():
     app = Flask(__name__)
     load_dotenv()
+    algod_client = algod.AlgodClient("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                     "http://localhost:4001")
+    indexer_client = indexer.IndexerClient("", "http://localhost:8980")
+    # Configuracion de la conexion a la base de datos
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://' + os.getenv('DATABASE_USER') + ':' + os.getenv(
         'DATABASE_PASSWORD') \

@@ -28,6 +28,7 @@ def get_account_info(Address: str):
     info = algod_client.account_info(Address)
     return {"Address": info}
 
+
 def get_balance(address):
     account_info = algod_client().account_info(address)
     balance = account_info.get('amount') / microalgos_to_algos_ratio

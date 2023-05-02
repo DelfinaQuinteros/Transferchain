@@ -1,6 +1,5 @@
 from datetime import datetime
 from main import db
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Transfer(db.Model):
@@ -11,6 +10,7 @@ class Transfer(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     approved = db.Column(db.Boolean, nullable=False, default=False)
+    car = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
 
     def __repr__(self):
         return f"<Transferencia {self.id}>"

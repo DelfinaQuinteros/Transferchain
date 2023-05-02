@@ -1,0 +1,24 @@
+#pragma version 2
+
+// Define las direcciones de los propietarios actuales y nuevos
+txn Sender
+addr current_owner
+txn ApplicationArgs 0
+addr new_owner
+
+// Verifica que el remitente sea el propietario actual del auto
+txn Sender
+global CurrentApplicationAddr
+==
+bnz valid_owner
+
+// Si el remitente no es el propietario actual, la transacción falla
+err
+
+valid_owner:
+// Transfiere la propiedad del auto al nuevo propietario
+new_owner
+app_global_put 0
+
+// La transacción es exitosa
+int 1
