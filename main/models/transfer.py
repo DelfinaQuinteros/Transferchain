@@ -9,8 +9,7 @@ class Transfer(db.Model):
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    approved = db.Column(db.Boolean, nullable=False, default=False)
-    car = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
 
     def __repr__(self):
         return f"<Transferencia {self.id}>"

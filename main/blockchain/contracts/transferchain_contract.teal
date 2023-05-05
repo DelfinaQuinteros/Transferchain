@@ -1,24 +1,21 @@
-#pragma version 2
-
-// Define las direcciones de los propietarios actuales y nuevos
+#pragma version 3
+// Define los campos de la transacción
+txn ApplicationID
 txn Sender
-addr current_owner
-txn ApplicationArgs 0
-addr new_owner
+txn OnCompletion
+txn Accounts[0]
+txn Accounts[1]
+txn RekeyTo
+global ZeroAddress
 
-// Verifica que el remitente sea el propietario actual del auto
-txn Sender
-global CurrentApplicationAddr
-==
-bnz valid_owner
+// Verifica que el sender sea el propietario actual del auto
+// y que el receptor no sea el mismo que el sender
+txn Sender == Txn Accounts[0]
+txn Accounts[0] != Txn Accounts[1]
 
-// Si el remitente no es el propietario actual, la transacción falla
-err
+// Verifica que el programa sea ejecutado en OnCompletion de una transacción de pago
+txn OnCompletion == OnComplete.OptIn
 
-valid_owner:
-// Transfiere la propiedad del auto al nuevo propietario
-new_owner
-app_global_put 0
-
-// La transacción es exitosa
-int 1
+// Transferir el auto al nuevo propietario
+txn Accounts[0] == Global ZeroAddress
+txn Accounts[1] == Txn Accounts[1]

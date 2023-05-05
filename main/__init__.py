@@ -1,5 +1,5 @@
 import os
-from algosdk.v2client import algod, indexer
+
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from dotenv import load_dotenv
@@ -13,9 +13,6 @@ db = SQLAlchemy()
 def create_app():
     app = Flask(__name__)
     load_dotenv()
-    algod_client = algod.AlgodClient("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                                     "http://localhost:4001")
-    indexer_client = indexer.IndexerClient("", "http://localhost:8980")
     # Configuracion de la conexion a la base de datos
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://' + os.getenv('DATABASE_USER') + ':' + os.getenv(
@@ -23,7 +20,8 @@ def create_app():
                                             + '@' + os.getenv('DATABASE_URL') + ':' + os.getenv('DATABASE_PORT') \
                                             + '/' + os.getenv('DATABASE_NAME')
     db.init_app(app)
-    from main.resources import user, home
+    from main.resources import user, home, cars
     app.register_blueprint(home, url_prefix='/')
     app.register_blueprint(user, url_prefix='/api/v1')
+    app.register_blueprint(cars, url_prefix='/api/v1')
     return app

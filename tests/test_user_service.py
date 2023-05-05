@@ -19,7 +19,7 @@ class TestUserService(unittest.TestCase):
         self.app_context.pop()
 
     def test_user(self):
-        user_model = User(name='Delfina', last_name='quinteros', email='delfina@gmail.com', dni='12345678', address='calle falsa 123', password='123456789', algorand_address='nsdnfskldgfnlasdnjfñdnfdffnedkfn', id=1, cars=None)
+        user_model = User(name='Delfina', last_name='quinteros', email='delfina@gmail.com', dni='12345678', address='calle falsa 123', password='123456789', algorand_address='nsdnfskldgfnlasdnjfñdnfdffsdfsdfnedkfn', id=1, cars=None)
         self.userService.create(user_model)
         self.assertGreater(user_model.id, 0)
         user1 = self.userService.find_by_id(1)
@@ -33,7 +33,7 @@ class TestUserService(unittest.TestCase):
         self.assertEqual(user.address, 'calle falsa 123')
         self.assertEqual(user.password, '123456789')
         self.assertEqual(user.cars, 'Toyota Corolla 2015')
-        self.assertEqual(user.algorand_address, 'nsdnfskldgfnlasdnjfñdnfdffnedkfn')
+        self.assertEqual(user.algorand_address, 'nsdnfskldgfnlasdnjfñdnfdffsdfsdfnedkfn')
         self.assertGreater(user.id, 0)
         self.assertEqual(user.email, 'delfina@gmail.com')
 
@@ -51,7 +51,7 @@ class TestUserService(unittest.TestCase):
         address = 'calle falsa 123'
         password = '123456789'
         id= 1
-        algorand_address = 'nsdnfskldgfnlasdnjfñdnfdffnedkfn'
+        algorand_address = 'nsdnfskldgfnlasdnjfñdnfdffsdfsdfnedkfn'
         cars = 'Toyota Corolla 2015'
         user = User(name=name, last_name=last_name, email=email, dni=dni, address=address, password=password, algorand_address=algorand_address, id=id, cars=cars)
         return self.userService.create(user)

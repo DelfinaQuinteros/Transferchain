@@ -1,20 +1,20 @@
+from datetime import datetime
+from hashlib import sha256
 import bcrypt as bcrypt
-from algosdk import account, transaction
+from algosdk import account, mnemonic
 from flask import request, jsonify, Blueprint
 import jwt
-from pyteal import compileTeal, Mode
 
-from main.__init__ import create_app
-from main.models import User, Transfer, Certificate
+from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn
+from main.models import User, Transfer, Certificate, Cars
 from main.repositories import UserRepository, TransferRepository, CertificateRepository
 from main import db
 
 user = Blueprint('user', __name__)
 users = {}
+cars = {}
 usr_report = UserRepository()
 transfer_repo = TransferRepository()
-
-
 # certificate_repo = CertificateRepository()
 
 
@@ -29,16 +29,17 @@ def register():
         address=data['address'],
         dni=data['dni'],
         email=data['email'],
-        password=hashed_password.decode('utf-8')
+        password=hashed_password.decode('utf-8'),
     )
+
     # Generar una dirección de Algorand para el nuevo usuario
-    new_address = account.generate_account()[1]
-    new_user.algorand_address = new_address
-    try:
-        usr_report.create(new_user)
-        return jsonify({'message': 'Usuario creado correctamente.'}), 201
-    except:
-        return jsonify({'message': 'Error al crear usuario.'}), 500
+    new_address = account.generate_account()
+    print("PRIVATE KEY: ", new_address)
+    new_user.algorand_address = new_address[1]
+    new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
+
+    usr_report.create(new_user)
+    return jsonify({'message': 'Usuario creado correctamente.'}), 201
 
 
 @user.route('/login', methods=['POST'])
@@ -46,7 +47,7 @@ def login():
     user = usr_report.find_by_username(request.json['name'])
     if user:
         if bcrypt.checkpw(request.json['password'].encode('utf-8'), user.password.encode('utf-8')):
-            token = jwt.encode({'name': user.name, 'email': user.email, 'role': user.role},
+            token = jwt.encode({'name': user.name, 'email': user.email},
                                'secret_key',
                                algorithm='HS256')
             return jsonify({'token': token}), 200
@@ -68,13 +69,46 @@ def get_user(id):
     return jsonify(user), 200
 
 
-def get_wallet_address(users_id):
-    cursor = db.cursor()
-    cursor.execute("SELECT algorand_address FROM users WHERE id=%s", (users_id,))
-    result = cursor.fetchone()
-    cursor.close()
-    if result is None:
-        return None
-    else:
-        return result[0]
+@user.route('/transfer-car', methods=['POST'])
+def transfer_car():
+    data = request.get_json()
+    sender_id = data['sender_id']
+    recipient_id = data['recipient_id']
+    car_id = data['car_id']
+    sender = User.query.get(sender_id)
+    recipient = User.query.get(recipient_id)
+    car_id = Cars.query.get(car_id)
 
+    # Verificar que el remitente es el propietario actual del automóvil
+    if sender.id != car_id.user_id:
+        return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
+
+    # Crear y firmar la transacción de Algorand
+    sender_mnemonic = sender.algorand_mnemonic
+    algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
+    signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+
+    # Enviar la transacción de Algorand
+    txid = send_algorand_txn(signed_txn)
+
+    # Registrar la transferencia en la base de datos
+    transfer = Transfer(
+        sender_id=sender_id,
+        recipient_id=recipient_id,
+        car_id=car_id
+    )
+    db.session.add(transfer)
+    db.session.commit()
+
+    # Registrar el certificado de la transferencia en la base de datos
+    certificate = Certificate(
+        transfer_id=transfer.id,
+        sender_id=sender_id,
+        recipient_id=recipient_id,
+        timestamp=datetime.utcnow(),
+        hash=sha256(str(txid).encode()).hexdigest()
+    )
+    db.session.add(certificate)
+    db.session.commit()
+
+    return jsonify({'message': 'La transferencia se realizó con éxito'}), 200
