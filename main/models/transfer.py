@@ -12,4 +12,4 @@ class Transfer(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
 
     def __repr__(self):
-        return f"<Transferencia {self.id}>"
+        return f"<Transferencia {self.id} {self.date} {self.sender_id} {self.recipient_id}>"

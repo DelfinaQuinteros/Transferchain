@@ -9,3 +9,4 @@ Werkzeug==2.2.3
 SQLAlchemy==2.0.10
 PyMySQL==1.0.3
 bcrypt~=4.0.1
+py-solc-x==1.1.1

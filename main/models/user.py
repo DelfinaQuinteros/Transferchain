@@ -15,6 +15,7 @@ class User(db.Model):
     password = Column(String(128), nullable=False)
     algorand_address = Column(String(120), unique=True, nullable=False)
     algorand_mnemonic = Column(String(250), unique=True, nullable=False)
+    algorand_private_key = Column(String(250), unique=True, nullable=False)
 
     def __repr__(self):
         return f'<User {self.name} {self.last_name} {self.email}>'

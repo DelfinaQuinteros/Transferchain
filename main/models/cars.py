@@ -1,7 +1,4 @@
-from sqlalchemy import String, Column, Integer
-
 from main import db
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Cars(db.Model):
@@ -13,5 +10,5 @@ class Cars(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Car {self.brand} {self.model} {self.year} {self.user_id}>'
+        return f'<Car {self.id}>'
 

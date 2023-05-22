@@ -4,10 +4,9 @@ import bcrypt as bcrypt
 from algosdk import account, mnemonic
 from flask import request, jsonify, Blueprint
 import jwt
-
-from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn
+from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract
 from main.models import User, Transfer, Certificate, Cars
-from main.repositories import UserRepository, TransferRepository, CertificateRepository
+from main.repositories import UserRepository, TransferRepository, CertificateRepository, CarsRepository
 from main import db
 
 user = Blueprint('user', __name__)
@@ -15,7 +14,7 @@ users = {}
 cars = {}
 usr_report = UserRepository()
 transfer_repo = TransferRepository()
-# certificate_repo = CertificateRepository()
+cars_repo = CarsRepository()
 
 
 @user.route('/register', methods=['POST'])
@@ -32,13 +31,14 @@ def register():
         password=hashed_password.decode('utf-8'),
     )
 
-    # Generar una dirección de Algorand para el nuevo usuario
+    # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
     new_address = account.generate_account()
-    print("PRIVATE KEY: ", new_address)
+    new_user.algorand_private_key = new_address[0]
     new_user.algorand_address = new_address[1]
     new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
 
     usr_report.create(new_user)
+
     return jsonify({'message': 'Usuario creado correctamente.'}), 201
 
 
@@ -69,7 +69,7 @@ def get_user(id):
     return jsonify(user), 200
 
 
-@user.route('/transfer-car', methods=['POST'])
+@user.route('/transfer-car', methods=['POST', 'GET'])
 def transfer_car():
     data = request.get_json()
     sender_id = data['sender_id']
@@ -79,26 +79,35 @@ def transfer_car():
     recipient = User.query.get(recipient_id)
     car_id = Cars.query.get(car_id)
 
-    # Verificar que el remitente es el propietario actual del automóvil
     if sender.id != car_id.user_id:
         return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
 
     # Crear y firmar la transacción de Algorand
+    # contr = contract(sender_id, recipient_id, car_id)
+    # print(contr)
     sender_mnemonic = sender.algorand_mnemonic
     algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
+    print(algo_txn)
     signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
-
+    print(signed_txn)
     # Enviar la transacción de Algorand
     txid = send_algorand_txn(signed_txn)
+    print('ID DE LA TRANSFERENCIA', txid)
 
     # Registrar la transferencia en la base de datos
     transfer = Transfer(
         sender_id=sender_id,
         recipient_id=recipient_id,
-        car_id=car_id
+        car_id=car_id.id,
     )
-    db.session.add(transfer)
-    db.session.commit()
+    transfer_repo.create(transfer)
+    cars = Cars(
+        user_id=recipient_id,
+        brand=car_id.brand,
+        model=car_id.model,
+        year=car_id.year,
+    )
+    cars_repo.update(cars)
 
     # Registrar el certificado de la transferencia en la base de datos
     certificate = Certificate(
@@ -112,3 +121,10 @@ def transfer_car():
     db.session.commit()
 
     return jsonify({'message': 'La transferencia se realizó con éxito'}), 200
+
+
+@user.route('/mytransfers', methods=['GET'])
+def get_my_transfers():
+    transfers = transfer_repo.find_by_name(request.json['name'])
+    return jsonify(transfers), 200
+

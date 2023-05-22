@@ -19,6 +19,9 @@ class TransferRepository(Create, Read, Update):
     def find_by_id(self, id: int) -> Transfer:
         return db.session.query(self.__transfer).get(id)
 
+    def find_by_name(self, name: str) -> Transfer:
+        return db.session.query(self.__transfer).filter(self.__transfer.name == name).first()
+
     def update(self, transfer: Transfer) -> Transfer:
         db.session.add(transfer)
         db.session.commit()
