@@ -1,7 +1,5 @@
 import os
-from algosdk.v2client import algod
 from main import create_app, db
-
 
 app = create_app()
 app.app_context().push()

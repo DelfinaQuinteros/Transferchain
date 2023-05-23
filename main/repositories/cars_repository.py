@@ -23,3 +23,8 @@ class CarsRepository(Create, Read, Update):
         db.session.add(car)
         db.session.commit()
         return car
+
+    def delete(self, id: int):
+        db.session.query(self.__car).filter(self.__car.id == id).delete()
+        db.session.commit()
+        return id

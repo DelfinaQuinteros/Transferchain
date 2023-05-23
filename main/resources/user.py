@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from hashlib import sha256
 import bcrypt as bcrypt
@@ -79,28 +80,19 @@ def transfer_car():
     recipient = User.query.get(recipient_id)
     car_id = Cars.query.get(car_id)
 
+    # Verificar que el remitente sea el propietario actual del automóvil
     if sender.id != car_id.user_id:
         return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
 
     # Crear y firmar la transacción de Algorand
-    # contr = contract(sender_id, recipient_id, car_id)
-    # print(contr)
+    contr = contract()
     sender_mnemonic = sender.algorand_mnemonic
     algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
-    print(algo_txn)
     signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
-    print(signed_txn)
+
     # Enviar la transacción de Algorand
     txid = send_algorand_txn(signed_txn)
-    print('ID DE LA TRANSFERENCIA', txid)
 
-    # Registrar la transferencia en la base de datos
-    transfer = Transfer(
-        sender_id=sender_id,
-        recipient_id=recipient_id,
-        car_id=car_id.id,
-    )
-    transfer_repo.create(transfer)
     cars = Cars(
         user_id=recipient_id,
         brand=car_id.brand,
@@ -108,6 +100,14 @@ def transfer_car():
         year=car_id.year,
     )
     cars_repo.update(cars)
+    cars_repo.delete(car_id.id)
+    # Registrar la transferencia en la base de datos
+    transfer = Transfer(
+        sender_id=sender_id,
+        recipient_id=recipient_id,
+        car_id=cars.id,
+    )
+    transfer_repo.create(transfer)
 
     # Registrar el certificado de la transferencia en la base de datos
     certificate = Certificate(
@@ -123,8 +123,19 @@ def transfer_car():
     return jsonify({'message': 'La transferencia se realizó con éxito'}), 200
 
 
-@user.route('/mytransfers', methods=['GET'])
-def get_my_transfers():
-    transfers = transfer_repo.find_by_name(request.json['name'])
+@user.route('/mytransfers/<sender_id>', methods=['GET'])
+def get_my_transfers(sender_id):
+    transfers = Transfer.query.filter_by(sender_id=sender_id).all()
     return jsonify(transfers), 200
 
+
+@user.route('/mycars/<user_id>', methods=['GET'])
+def get_my_cars(user_id):
+    cars = Cars.query.filter_by(user_id=user_id).all()
+    return jsonify(cars), 200
+
+
+@user.route('/mycertificates/<transfer_id>', methods=['GET'])
+def get_my_certificates(transfer_id):
+    certificates = Certificate.query.filter_by(transfer_id=transfer_id).all()
+    return jsonify(certificates), 200

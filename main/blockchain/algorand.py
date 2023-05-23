@@ -31,60 +31,58 @@ def send_algorand_txn(signed_txn):
     return txid
 
 
-def contract(current_owner: User, new_owner: User, car: Cars):
-    contract = pyteal.compileTeal(pyteal.App(
-        pyteal.If(
-            pyteal.And(
-                pyteal.Txn.sender() == pyteal.Addr(current_owner.algorand_address),
-                pyteal.Txn.asset_sender() == pyteal.Addr(current_owner.algorand_address),
-                pyteal.Txn.asset_receiver() == pyteal.Addr(new_owner.algorand_address),
-                pyteal.Txn.asset_amount() == pyteal.Int(1)
-            ),
-            pyteal.Seq(
-                pyteal.Assert(
-                    pyteal.Global.group_size() == pyteal.Int(1)
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("sender"),
-                    pyteal.App.optIn(
-                        pyteal.Bytes("autos_" + str(current_owner.id)),
-                        on_completion=pyteal.OnComplete.NoOp
-                    ).asset_close_to()
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("recipient"),
-                    pyteal.App.optIn(
-                        pyteal.Bytes("autos_" + str(new_owner.id)),
-                        on_completion=pyteal.OnComplete.NoOp
-                    ).asset_acceptance()
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("timestamp"),
-                    pyteal.Global.latest_timestamp()
-                ),
-                pyteal.Assert(
-                    pyteal.App.localGet(pyteal.Bytes("sender"), pyteal.Bytes("count")) == pyteal.Int(0)
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("sender"),
-                    pyteal.Int(1)
-                ),
-                pyteal.Assert(
-                    pyteal.App.globalGet(pyteal.Bytes("AssetID")) == pyteal.Int(car.asset_id)
-                ),
-                pyteal.Assert(
-                    pyteal.App.globalGet(pyteal.Bytes("AppID")) == pyteal.Int(car.app_id)
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("sender"),
-                    pyteal.Global.latest_timestamp()
-                ),
-                pyteal.App.localPut(
-                    pyteal.Bytes("recipient"),
-                    pyteal.Global.latest_timestamp()
-                ),
-                pyteal.Return(pyteal.Int(1))
-            )
-        )
-    ))
-    return contract
+def contract():
+    contract_teal_code = ("""
+     // Definir las variables del contrato
+     bytes user.id
+     bytes brand
+     bytes model
+     int year
+
+     // Verificar los datos
+     // Compara los datos recibidos con los almacenados en el contrato
+     int verifyData:
+         owner = Txn.application_args[0]
+         brand = Txn.application_args[1]
+         model = Txn.application_args[2]
+         year = Txn.application_args[3]
+
+         // Verificar que los datos sean correctos
+         return Cond(
+             // Comparar los datos con los almacenados en el contrato
+             And(
+                 BytesEq(owner, App.localGet(Int(0))),
+                 BytesEq(brand, App.localGet(Int(1))),
+                 BytesEq(model, App.localGet(Int(2))),
+                 Eq(year, App.localGet(Int(3)))
+             ),
+             // Si los datos coinciden, devuelve 1 (verificación exitosa)
+             Int(1),
+             // Si los datos no coinciden, devuelve 0 (verificación fallida)
+             Int(0)
+         )
+
+     // Lógica de ejecución del contrato
+     // El contrato solo acepta transacciones con la operación "ApplicationCall"
+     // y verifica los datos utilizando la función "verifyData"
+     txn_accept:
+         // Verificar que la operación sea "ApplicationCall"
+         is_app_call = Txn.application_id != Int(0)
+         // Verificar los datos llamando a la función "verifyData"
+         data_verified = App.localPut(Int(0), App.localGetEx(Int(0)), Txn.application_args[0]) &&
+                         App.localPut(Int(1), App.localGetEx(Int(1)), Txn.application_args[1]) &&
+                         App.localPut(Int(2), App.localGetEx(Int(2)), Txn.application_args[2]) &&
+                         App.localPut(Int(3), App.localGetEx(Int(3)), Txn.application_args[3]) &&
+                         App.localPut(Int(4), App.localGetEx(Int(4)), App.localGet(Int(4)) + Int(1))
+
+         // Aceptar la transacción solo si la operación es "ApplicationCall"
+         // y los datos son verificados correctamente
+         return And(is_app_call, data_verified)
+
+     // Programa principal del contrato
+     main:
+         // Ejecutar la lógica de ejecución del contrato
+         return txn_accept
+     """)
+    contract_teal_bytes = contract_teal_code.encode()
+    return contract_teal_bytes
