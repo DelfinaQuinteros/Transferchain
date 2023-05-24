@@ -1,3 +1,4 @@
+import base64
 import json
 from datetime import datetime
 from hashlib import sha256
@@ -5,7 +6,9 @@ import bcrypt as bcrypt
 from algosdk import account, mnemonic
 from flask import request, jsonify, Blueprint
 import jwt
-from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract
+from pyteal import Txn
+
+from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract, algod_client
 from main.models import User, Transfer, Certificate, Cars
 from main.repositories import UserRepository, TransferRepository, CertificateRepository, CarsRepository
 from main import db
@@ -16,6 +19,7 @@ cars = {}
 usr_report = UserRepository()
 transfer_repo = TransferRepository()
 cars_repo = CarsRepository()
+cert_repo = CertificateRepository()
 
 
 @user.route('/register', methods=['POST'])
@@ -125,8 +129,8 @@ def transfer_car():
 
 @user.route('/mytransfers/<sender_id>', methods=['GET'])
 def get_my_transfers(sender_id):
-    transfers = Transfer.query.filter_by(sender_id=sender_id).all()
-    return jsonify(transfers), 200
+    transfers = transfer_repo.find_by_sender_id(sender_id)
+    return jsonify(transfers.to_json()), 200
 
 
 @user.route('/mycars/<user_id>', methods=['GET'])
@@ -137,5 +141,5 @@ def get_my_cars(user_id):
 
 @user.route('/mycertificates/<transfer_id>', methods=['GET'])
 def get_my_certificates(transfer_id):
-    certificates = Certificate.query.filter_by(transfer_id=transfer_id).all()
-    return jsonify(certificates), 200
+    certificates = cert_repo.find_by_id(id=transfer_id)
+    return jsonify(certificates.to_json()), 200

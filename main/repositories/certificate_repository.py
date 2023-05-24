@@ -18,3 +18,9 @@ class CertificateRepository(Create, Read, Update):
 
     def find_by_id(self, id: int) -> Certificate:
         return db.session.query(self.__certificate).get(id)
+
+    def update(self, certificate: Certificate) -> Certificate:
+        db.session.add(certificate)
+        db.session.commit()
+        return certificate
+
