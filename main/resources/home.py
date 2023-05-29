@@ -3,7 +3,7 @@ from flask import Blueprint, render_template
 
 from main.blockchain.algorand import algod_client
 
-home = Blueprint('home', __name__, template_folder='templates', static_folder='static')
+home = Blueprint('home', __name__, template_folder='templates', static_folder='css')
 
 
 @home.route('/', methods=['GET', 'POST'])
