@@ -77,11 +77,11 @@ def get_user(id):
 @user.route('/transfer-car', methods=['POST', 'GET'])
 def transfer_car():
     data = request.get_json()
-    sender_id = data['sender_id']
-    recipient_id = data['recipient_id']
+    owner = data['owner']
+    new_owner = data['new_owner']
     car_id = data['car_id']
-    sender = User.query.get(sender_id)
-    recipient = User.query.get(recipient_id)
+    sender = User.query.get(owner)
+    recipient = User.query.get(new_owner)
     car_id = Cars.query.get(car_id)
 
     # Verificar que el remitente sea el propietario actual del automóvil
@@ -89,26 +89,35 @@ def transfer_car():
         return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
 
     # Crear y firmar la transacción de Algorand
-    contr = contract()
-    sender_mnemonic = sender.algorand_mnemonic
-    algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
-    signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+    try:
+        contr = contract()
+        sender_mnemonic = sender.algorand_mnemonic
+        algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
+        signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+    except:
+        return jsonify({'error': 'No tiene fondos suficientes para realizar la transaccion'}), 400
 
     # Enviar la transacción de Algorand
     txid = send_algorand_txn(signed_txn)
 
     cars = Cars(
-        user_id=recipient_id,
+        user_id=new_owner,
         brand=car_id.brand,
         model=car_id.model,
         year=car_id.year,
     )
     cars_repo.update(cars)
     cars_repo.delete(car_id.id)
+
+    sender = User.query.get(owner)
+    recipient = User.query.get(new_owner)
+    car = Cars.query.get(car_id)
+    print("DATOS", sender, recipient, car)
+
     # Registrar la transferencia en la base de datos
     transfer = Transfer(
-        sender_id=sender_id,
-        recipient_id=recipient_id,
+        owner=owner,
+        new_owner=new_owner,
         car_id=cars.id,
     )
     transfer_repo.create(transfer)
@@ -116,10 +125,10 @@ def transfer_car():
     # Registrar el certificado de la transferencia en la base de datos
     certificate = Certificate(
         transfer_id=transfer.id,
-        sender_id=sender_id,
-        recipient_id=recipient_id,
+        owner=owner,
+        new_owner=new_owner,
         timestamp=datetime.utcnow(),
-        hash=sha256(str(txid).encode()).hexdigest()
+        transaction_id_algorand=txid
     )
     db.session.add(certificate)
     db.session.commit()
@@ -127,10 +136,16 @@ def transfer_car():
     return jsonify({'message': 'La transferencia se realizó con éxito'}), 200
 
 
-@user.route('/mytransfers/<sender_id>', methods=['GET'])
-def get_my_transfers(sender_id):
-    transfers = transfer_repo.find_by_sender_id(sender_id)
-    return jsonify(transfers.to_json()), 200
+@user.route('/mytransfers/<owner>', methods=['GET'])
+def get_my_transfers(owner):
+    try:
+        transfers = transfer_repo.find_by_owner(owner)
+        owner = User.query.get(owner)
+        trans = owner.to_json()
+        new_owner = User.query.get(transfers.new_owner).to_json()
+        return jsonify(transfers.to_json(), trans, new_owner), 200
+    except AttributeError:
+        return jsonify({'Error': 'No tiene transferencias'}), 400
 
 
 @user.route('/mycars/<user_id>', methods=['GET'])
@@ -142,4 +157,6 @@ def get_my_cars(user_id):
 @user.route('/mycertificates/<transfer_id>', methods=['GET'])
 def get_my_certificates(transfer_id):
     certificates = cert_repo.find_by_id(id=transfer_id)
-    return jsonify(certificates.to_json()), 200
+    owner = User.query.get(certificates.owner).to_json()
+    new_owner = User.query.get(certificates.new_owner).to_json()
+    return jsonify(certificates.to_json(), owner, new_owner), 200

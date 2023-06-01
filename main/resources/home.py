@@ -6,7 +6,7 @@ from main.blockchain.algorand import algod_client
 home = Blueprint('home', __name__, template_folder='templates', static_folder='css')
 
 
-@home.route('/', methods=['GET', 'POST'])
+@home.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 

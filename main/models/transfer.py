@@ -5,14 +5,14 @@ from main import db
 def from_json(transfers):
     id = transfers['id']
     date = transfers['date']
-    sender_id = transfers['sender_id']
-    recipient_id = transfers['recipient_id']
+    owner = transfers['owner']
+    new_owner = transfers['new_owner']
     car_id = transfers['car_id']
     return Transfer(
         id=id,
         date=date,
-        sender_id=sender_id,
-        recipient_id=recipient_id,
+        owner=owner,
+        new_owner=new_owner,
         car_id=car_id,
 
     )
@@ -23,19 +23,19 @@ class Transfer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    owner = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    new_owner = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
 
     def __repr__(self):
-        return f"<Transferencia {self.id} {self.date} {self.sender_id} {self.recipient_id}>"
+        return f"<Transferencia {self.id} {self.date} {self.owner} {self.new_owner}>"
 
     def to_json(self):
         transfers = {
             'id': self.id,
             'date': self.date,
-            'sender_id': self.sender_id,
-            'recipient_id': self.recipient_id,
+            'owner': self.owner,
+            'new_owner': self.new_owner,
             'car_id': self.car_id,
         }
         return transfers

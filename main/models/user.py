@@ -18,5 +18,32 @@ class User(db.Model):
     algorand_private_key = Column(String(250), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<User {self.name} {self.last_name} {self.email}>'
+        return f'<User {self.name} {self.last_name} {self.dni} {self.address}>'
+
+    def to_json(self):
+        user = {
+            'id': self.id,
+            'name': self.name,
+            'last_name': self.last_name,
+            'address': self.address,
+            'dni': self.dni,
+            'email': self.email
+        }
+        return user
+
+    def from_json(user):
+        id = user['id']
+        name = user['name']
+        last_name = user['last_name']
+        address = user['address']
+        dni = user['dni']
+        email = user['email']
+        return User(
+            id=id,
+            name=name,
+            last_name=last_name,
+            address=address,
+            dni=dni,
+            email=email
+        )
 
