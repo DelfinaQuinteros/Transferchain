@@ -1,0 +1,22 @@
+{% macro mostrarcampo(campo) %}
+{{campo.label}}
+{{campo(**kwargs)}}
+{{mostrarerror(campo)}}
+{% endmacro %}
+
+{% macro mostrarenvio(campo) %}
+{{campo(**kwargs)|safe}}
+{% endmacro %}
+
+{% macro mostrarerror(campo) %}
+{% if campo.errors %}
+{% for error in campo.errors %}
+<span style="color:red">{{error}}</span><br/>
+{% endfor %}
+{% endif %}
+{% endmacro %}
+
+{% macro mostrarcamposinetiquera(campo) %}
+{{ campo(**kwargs)|safe }}
+{{ mostrarerror(campo) }}
+{% endmacro %}

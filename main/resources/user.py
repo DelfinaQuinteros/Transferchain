@@ -1,12 +1,12 @@
 import base64
 import json
 from datetime import datetime
-from hashlib import sha256
+from json import JSONEncoder
 import bcrypt as bcrypt
 from algosdk import account, mnemonic
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, flash, render_template
 import jwt
-from pyteal import Txn
+from ..forms.register_form import RegisterForm
 
 from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract, algod_client
 from main.models import User, Transfer, Certificate, Cars
@@ -24,32 +24,37 @@ cert_repo = CertificateRepository()
 
 @user.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    form = RegisterForm()
+    if form.validate():
+        data = request.get_json()
+        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
-    new_user = User(
-        name=data['name'],
-        last_name=data['last_name'],
-        address=data['address'],
-        dni=data['dni'],
-        email=data['email'],
-        password=hashed_password.decode('utf-8'),
-    )
+        new_user = User(
+            name=data['name'],
+            last_name=data['last_name'],
+            address=data['address'],
+            dni=data['dni'],
+            email=data['email'],
+            password=hashed_password.decode('utf-8'),
+        )
 
-    # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
-    new_address = account.generate_account()
-    new_user.algorand_private_key = new_address[0]
-    new_user.algorand_address = new_address[1]
-    new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
+        # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
+        new_address = account.generate_account()
+        new_user.algorand_private_key = new_address[0]
+        new_user.algorand_address = new_address[1]
+        new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
 
-    usr_report.create(new_user)
+        usr_report.create(new_user)
 
-    return jsonify({'message': 'Usuario creado correctamente.'}), 201
+        return jsonify({'message': 'Usuario creado correctamente.'}), 201
+    else:
+        flash('Usuario no creado, verifique los datos ingresados.', 'danger')
+    return render_template('register.html', form=form)
 
 
 @user.route('/login', methods=['POST'])
 def login():
-    user = usr_report.find_by_username(request.json['name'])
+    user = usr_report.find_by_email(request.json['email'])
     if user:
         if bcrypt.checkpw(request.json['password'].encode('utf-8'), user.password.encode('utf-8')):
             token = jwt.encode({'name': user.name, 'email': user.email},
@@ -112,7 +117,6 @@ def transfer_car():
     sender = User.query.get(owner)
     recipient = User.query.get(new_owner)
     car = Cars.query.get(car_id)
-    print("DATOS", sender, recipient, car)
 
     # Registrar la transferencia en la base de datos
     transfer = Transfer(
