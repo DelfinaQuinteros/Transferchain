@@ -12,7 +12,7 @@
     <nav class="navbar navbar-light bg-light">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">
-          <img src="static/img/logo.png" alt="" width="30" height="24" class="d-inline-block align-text-top">
+          <img src="static/img/logo.png" alt="" width="30" height="30" class="d-inline-block align-text-center">
           Transferchain
         </a>
       </div>
@@ -31,39 +31,35 @@
                     <br><br>
                 </div>
             </div>
-            <form method="POST" action="/login">
-                {{ form.csrf_token }}
+            <form method="POST" action="{{url_for('user.login')}}">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                 <div class="row">
                     <div class="col-lg-12">
                         <label class="mdc-text-field mdc-text-field--outlined w-100">
-
+                            <span class = "mdc-text-field__ripple"></span>
+                            {{mostrarcampo(form.email, class="mdc-text-field__input")}}
                             <span class="material-icons-outlined mdc-text-field__icon mdc-text-field__icon--trailing">
                                 face
                             </span>
                         </label>
-                        {% if form.email.errors %} <!-- Mostrar errores de validación -->
-                            <ul class="errors">
-                                {% for error in form.email.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+
                     </div>
                 </div>
 
                 <!-- row 2 -->
-                <div class="row mt-3">
-                    <div class="col-lg-12">
-                        <label class="mdc-text-field mdc-text-field--outlined w-100 text-field-pass">
-                            {{mostrarcampo(form.password, class="form-control")}}
-                            <!-- ICON EYE -->
-                            <span id="icon-view-pass2">
-                                <span class="material-icons-outlined mdc-text-field__icon mdc-text-field__icon--trailing">
-                                    visibility_off
+                    <div class="row mt-3">
+                        <div class="col-lg-12">
+                            <label class="mdc-text-field mdc-text-field--outlined w-100 text-field-pass">
+
+                                 {{ mostrarcampo(form.password, class="mdc-text-field__input toggle-password") }}
+                                <!-- ICON EYE -->
+                                <span id="icon-view-pass2">
+                                    <span class="material-icons-outlined mdc-text-field__icon mdc-text-field__icon--trailing">
+                                        visibility_off
+                                    </span>
                                 </span>
-                            </span>
-                        </label>
-                    </div>
+                            </label>
+                        </div>
                     <br><br>
                     <br><br>
                 </div>

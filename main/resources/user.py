@@ -52,42 +52,26 @@ def register():
         flash('Usuario no creado, verifique los datos ingresados.', 'danger')
     return render_template('register.html', form=form)
 
-"""
+
 @user.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
     if form.validate_on_submit():
-        print("VALIDATE")
-        if request.method == 'POST':
-            email = request.form['email']
-            password = request.form['password']
-            api_url = 'http://localhost:5555/auth/login'
-            data = {"email": email, "password": password}
-            print("DATA", data)
-            headers = {"Content-Type": "application/json", 'X-CSRF-Token': request.cookies['csrf_access_token']}
-            response = requests.post(api_url, json=data, headers=headers)
-            print("RESPONSE", response.text)
-
-            if response.status_code == 400:
-                return render_template('index.html', error="Invalid email or password")
-
-            if response.status_code == 200:
-                response = json.loads(response.text)
-                token = response["access_token"]
-                user_id = str(response["id"])
-                resp = make_response(redirect(url_for('home.index')))
-                resp.set_cookie('access_token', token)
-                resp.set_cookie("id", user_id)
-                return resp
-            else:
-                return render_template('login.html', error="Invalid email or password", form=form)
+        data = {"email": form.email.data, "password": form.password.data}
+        headers = {"content-type": "application/json"}
+        r = requests.post(
+            current_app.config["API_URL"] + '/auth/login',
+            headers=headers,
+            data=json.dumps(data))
+        if r.status_code == 200:
+            user_data = json.loads(r.text)
+            req = make_response(render_template('profile.html'))
+            req.set_cookie('access_token', user_data.get("access_token"), httponly=True)
+            return req
         else:
-            return render_template('login.html', error="Invalid email or password", form=form)
+            flash('Usuario o contraseña incorrecta', 'danger')
     return render_template('login.html', form=form)
-
 """
-
 
 @user.route('/login', methods=['GET', 'POST'])
 def login():
@@ -95,23 +79,23 @@ def login():
     if form.validate_on_submit():
         data = {"email": form.email.data, "password": form.password.data}
         print("DATA", data)
-        headers = {"content-type": "application/json", 'X-CSRF-Token': request.cookies['csrf_access_token']}
+        headers = {"content-type": "application/json"}
+        url = 'http://localhost:5555/login'
         r = requests.post(
-            'http://localhost:5555/login',
+            url=url,
             headers=headers,
             data=json.dumps(data))
+        print("RESPONSE", r.text, r.status_code)
         if r.status_code == 200:
             print("LO ROMPE EL LOADS")
             user_data = json.loads(r.text)
             print("USER DATA", user_data)
             req = make_response(render_template('profile.html'))
-            req.set_cookie('access_token', user_data.get("access_token"), httponly=True)
             return req, 200
         else:
             flash('Usuario o contraseña incorrecta', 'danger')
     return render_template('login.html', form=form)
-
-
+"""
 
 @user.route('/profile', methods=['GET'])
 def profile():

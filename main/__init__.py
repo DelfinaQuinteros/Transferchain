@@ -5,6 +5,7 @@ from flask import Flask, request
 from dotenv import load_dotenv
 import pymysql
 from flask_wtf.csrf import CSRFProtect
+from flask_cors import CORS
 
 pymysql.install_as_MySQLdb()
 csrf = CSRFProtect()
@@ -14,9 +15,10 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     load_dotenv()
     app.config['API_URL'] = 'http://localhost:5555'
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.secret_key = os.getenv('SECRET_KEY')
     csrf.init_app(app)
     # Configuracion de la conexion a la base de datos
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

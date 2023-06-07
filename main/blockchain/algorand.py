@@ -1,10 +1,6 @@
 from algosdk import transaction, mnemonic
 from algosdk.v2client import algod
-import pyteal
-from pyteal import Seq, Txn, Int
-from pyteal.ast import abi
 
-from main.models import User, Cars
 
 algod_address = "https://testnet-algorand.api.purestake.io/ps2"
 algod_token = "TnqYtzsJKK1DS3TLNWDJ29wZEex8Y3iy5kNjhrx6"
