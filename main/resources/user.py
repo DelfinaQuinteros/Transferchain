@@ -1,12 +1,13 @@
-import base64
+import jwt
+from django.views.decorators.csrf import requires_csrf_token
 import json
 from datetime import datetime
-from json import JSONEncoder
 import bcrypt as bcrypt
+import requests
 from algosdk import account, mnemonic
-from flask import request, jsonify, Blueprint, flash, render_template
-import jwt
+from flask import request, jsonify, Blueprint, flash, render_template, current_app, make_response, redirect, url_for
 from ..forms.register_form import RegisterForm
+from ..forms.login_form import LoginForm
 
 from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract, algod_client
 from main.models import User, Transfer, Certificate, Cars
@@ -51,32 +52,70 @@ def register():
         flash('Usuario no creado, verifique los datos ingresados.', 'danger')
     return render_template('register.html', form=form)
 
-
-@user.route('/login', methods=['POST'])
+"""
+@user.route('/login', methods=['GET', 'POST'])
 def login():
-    user = usr_report.find_by_email(request.json['email'])
-    if user:
-        if bcrypt.checkpw(request.json['password'].encode('utf-8'), user.password.encode('utf-8')):
-            token = jwt.encode({'name': user.name, 'email': user.email},
-                               'secret_key',
-                               algorithm='HS256')
-            return jsonify({'token': token}), 200
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        print("VALIDATE")
+        if request.method == 'POST':
+            email = request.form['email']
+            password = request.form['password']
+            api_url = 'http://localhost:5555/auth/login'
+            data = {"email": email, "password": password}
+            print("DATA", data)
+            headers = {"Content-Type": "application/json", 'X-CSRF-Token': request.cookies['csrf_access_token']}
+            response = requests.post(api_url, json=data, headers=headers)
+            print("RESPONSE", response.text)
+
+            if response.status_code == 400:
+                return render_template('index.html', error="Invalid email or password")
+
+            if response.status_code == 200:
+                response = json.loads(response.text)
+                token = response["access_token"]
+                user_id = str(response["id"])
+                resp = make_response(redirect(url_for('home.index')))
+                resp.set_cookie('access_token', token)
+                resp.set_cookie("id", user_id)
+                return resp
+            else:
+                return render_template('login.html', error="Invalid email or password", form=form)
         else:
-            return jsonify({'message': 'Usuario o contraseña incorrectos.'}), 401
-    else:
-        return jsonify({'message': 'Usuario o contraseña incorrectos.'}), 401
+            return render_template('login.html', error="Invalid email or password", form=form)
+    return render_template('login.html', form=form)
+
+"""
 
 
-@user.route('/users', methods=['GET'])
-def get_users():
-    users = usr_report.find_all()
-    return jsonify(users), 200
+@user.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        data = {"email": form.email.data, "password": form.password.data}
+        print("DATA", data)
+        headers = {"content-type": "application/json", 'X-CSRF-Token': request.cookies['csrf_access_token']}
+        r = requests.post(
+            'http://localhost:5555/login',
+            headers=headers,
+            data=json.dumps(data))
+        if r.status_code == 200:
+            print("LO ROMPE EL LOADS")
+            user_data = json.loads(r.text)
+            print("USER DATA", user_data)
+            req = make_response(render_template('profile.html'))
+            req.set_cookie('access_token', user_data.get("access_token"), httponly=True)
+            return req, 200
+        else:
+            flash('Usuario o contraseña incorrecta', 'danger')
+    return render_template('login.html', form=form)
 
 
-@user.route('/users/<int:id>', methods=['GET'])
-def get_user(id):
-    user = usr_report.find_by_id(id)
-    return jsonify(user), 200
+
+@user.route('/profile', methods=['GET'])
+def profile():
+    return render_template('profile.html')
 
 
 @user.route('/transfer-car', methods=['POST', 'GET'])

@@ -1,4 +1,5 @@
 from sqlalchemy import Integer, String, Column
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from main import db
 
@@ -16,6 +17,21 @@ class User(db.Model):
     algorand_address = Column(String(120), unique=True, nullable=False)
     algorand_mnemonic = Column(String(250), unique=True, nullable=False)
     algorand_private_key = Column(String(250), unique=True, nullable=False)
+
+    # Getter de la contraseña plana no permite leerla
+    @property
+    def plain_password(self):
+        raise AttributeError('Password cant be read')
+
+        # Setter de la contraseña toma un valor en texto plano
+        # calcula el hash y lo guarda en el atributo password
+    @plain_password.setter
+    def plain_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def validate_pass(self, password):
+        print(f"Password: {password}, Self.password: {self.password}")
+        return check_password_hash(self.password, password)
 
     def __repr__(self):
         return f'<User {self.name} {self.last_name} {self.dni} {self.address}>'

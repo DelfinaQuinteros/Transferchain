@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bienvenido a TransferChain</title>
+  <style>
+    /* Estilos para el contenedor principal */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Estilos para el texto que aparece palabra a palabra */
+    .text {
+      font-size: 64px;
+      font-weight: bold;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      animation: typing 6s steps(20, end);
+    }
+
+    /* Animación para mostrar el texto palabra a palabra */
+    @keyframes typing {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    /* Estilos para el botón de inicio de sesión */
+    .button {
+      margin-top: 20px;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: none;
+      color: #fff;
+      background-color: #ff7c39;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    /* Estilos para el botón de inicio de sesión al pasar el mouse */
+    .button:hover {
+          box-shadow: 5px 5px 10px #ccc;
+          color: #fff;
+    }
+        /* Estilos para el navbar */
+    .navbar {
+      background-color: #fff;
+      padding: 10px;
+    }
+
+    /* Estilos para el enlace del navbar */
+    .navbar-brand {
+      color: #000000;
+      font-size: 20px;
+      font-weight: bold;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Estilos para el ícono del navbar */
+    .navbar-brand img {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <img src="static/img/logo.png" alt="" width="40" height="40" class="d-inline-block align-text-center">
+        Transferchain
+      </a>
+    </div>
+  </nav>
+  <br>
+  <div class="container" style="max-eight: 52px; margin-top: -65px">
+      <img src="static/img/logo.png" alt="Logo" id="logoSkoy" width="350" >
+      <h1 class="text">Bienvenido a TransferChain</h1>
+      <a class="button" href="/login">Iniciar sesion</a>
+  </div>
+</body>
+</html>
