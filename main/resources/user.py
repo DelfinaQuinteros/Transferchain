@@ -1,5 +1,5 @@
 import jwt
-from django.views.decorators.csrf import requires_csrf_token
+from flask_login import login_user, current_user, logout_user, login_required
 import json
 from datetime import datetime
 import bcrypt as bcrypt
@@ -57,8 +57,10 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        print("CSRF Token:", form.csrf_token.data)
         data = {"email": form.email.data, "password": form.password.data}
         headers = {"content-type": "application/json"}
+        print("DATA", data)
         r = requests.post(
             current_app.config["API_URL"] + '/auth/login',
             headers=headers,
@@ -68,34 +70,11 @@ def login():
             req = make_response(render_template('profile.html'))
             req.set_cookie('access_token', user_data.get("access_token"), httponly=True)
             return req
-        else:
-            flash('Usuario o contraseña incorrecta', 'danger')
-    return render_template('login.html', form=form)
-"""
 
-@user.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        data = {"email": form.email.data, "password": form.password.data}
-        print("DATA", data)
-        headers = {"content-type": "application/json"}
-        url = 'http://localhost:5555/login'
-        r = requests.post(
-            url=url,
-            headers=headers,
-            data=json.dumps(data))
-        print("RESPONSE", r.text, r.status_code)
-        if r.status_code == 200:
-            print("LO ROMPE EL LOADS")
-            user_data = json.loads(r.text)
-            print("USER DATA", user_data)
-            req = make_response(render_template('profile.html'))
-            return req, 200
         else:
             flash('Usuario o contraseña incorrecta', 'danger')
     return render_template('login.html', form=form)
-"""
+
 
 @user.route('/profile', methods=['GET'])
 def profile():

@@ -1,8 +1,9 @@
-from flask_wtf import FlaskForm
+from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import PasswordField, SubmitField
 from wtforms.fields import EmailField
 from wtforms import validators
 
+csrf = CSRFProtect()
 
 class LoginForm(FlaskForm):
     email = EmailField('',

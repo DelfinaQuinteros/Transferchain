@@ -15,7 +15,6 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
     load_dotenv()
     app.config['API_URL'] = 'http://localhost:5555'
     app.secret_key = os.getenv('SECRET_KEY')
@@ -33,4 +32,10 @@ def create_app():
     app.register_blueprint(user, url_prefix='/')
     app.register_blueprint(cars, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/auth')
+
+    # Permitir solicitudes de otros orígenes
+    CORS(app, support_credentials=True)
+    app.config["CORS_HEADERS"] = "Content-Type"
+    CORS(app, resources={r"*": {"origins": "*"}})
+
     return app
