@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8-debian
+    ports:
+      - 3336:3306
+    environment:
+      - MYSQL_USER=delfina
+      - MYSQL_PASSWORD=delfi123
+      - MYSQL_DATABASE=transferchain
+      - MYSQL_ROOT_PASSWORD=delfi123
+
+    restart:
+        always
