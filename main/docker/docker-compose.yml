@@ -11,5 +11,7 @@ services:
       - MYSQL_DATABASE=transferchain
       - MYSQL_ROOT_PASSWORD=delfi123
 
+    command: --bind-address=0.0.0.0
+
     restart:
         always
