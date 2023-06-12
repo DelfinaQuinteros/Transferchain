@@ -7,5 +7,5 @@ app.app_context().push()
 
 if __name__ == '__main__':
     db.create_all()
-    app.run(port=os.getenv('PORT'), host='0.0.0.0')
+    app.run(port=5000, host='0.0.0.0')
 
