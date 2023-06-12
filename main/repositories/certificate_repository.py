@@ -24,3 +24,5 @@ class CertificateRepository(Create, Read, Update):
         db.session.commit()
         return certificate
 
+    def get_certificates_user_id(self, user_id: int):
+        return db.session.query(self.__certificate).filter(self.__certificate.owner == user_id).all()

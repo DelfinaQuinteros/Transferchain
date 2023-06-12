@@ -26,7 +26,9 @@ class Transfer(db.Model):
     owner = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     new_owner = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     car_id = db.Column(db.Integer, db.ForeignKey('cars.id'), nullable=False)
-
+    car = db.relationship('Cars', backref='transfers')
+    owner_user = db.relationship('User', foreign_keys=[owner])
+    new_owner_user = db.relationship('User', foreign_keys=[new_owner])
     def __repr__(self):
         return f"<Transferencia {self.id} {self.date} {self.owner} {self.new_owner}>"
 

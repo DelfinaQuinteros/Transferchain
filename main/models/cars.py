@@ -8,7 +8,8 @@ class Cars(db.Model):
     model = db.Column(db.String(50), nullable=False)
     year = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    owner = db.relationship('User', backref='cars')
 
     def __repr__(self):
-        return f'<Car {self.id}>'
+        return f'<Car {self.id} {self.brand} {self.model} {self.year} {self.user_id}>'
 

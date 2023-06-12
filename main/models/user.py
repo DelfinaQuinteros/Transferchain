@@ -1,10 +1,14 @@
 from sqlalchemy import Integer, String, Column
-from werkzeug.security import check_password_hash, generate_password_hash
+from main import db, login_manager
+from flask_login import UserMixin
 
-from main import db
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
@@ -18,23 +22,14 @@ class User(db.Model):
     algorand_mnemonic = Column(String(250), unique=True, nullable=False)
     algorand_private_key = Column(String(250), unique=True, nullable=False)
 
-    # Getter de la contraseña plana no permite leerla
-    @property
-    def plain_password(self):
-        raise AttributeError('Password cant be read')
-
-        # Setter de la contraseña toma un valor en texto plano
-        # calcula el hash y lo guarda en el atributo password
-    @plain_password.setter
-    def plain_password(self, password):
-        self.password = generate_password_hash(password)
-
-    def validate_pass(self, password):
-        print(f"Password: {password}, Self.password: {self.password}")
-        return check_password_hash(self.password, password)
-
     def __repr__(self):
-        return f'<User {self.name} {self.last_name} {self.dni} {self.address}>'
+        return f'<User {self.id} {self.name} {self.last_name} {self.dni} {self.address}>'
+
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return str(self.id)
 
     def to_json(self):
         user = {

@@ -11,7 +11,9 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth.route('/login', methods=['POST'])
 def login():
-    usuario = db.session.query(User.filter(User.email == request.get_json().get("email")).first_or_404())
+    usuario = User.query.filter_by(email=request.get_json().get("email")).first()
+    headers = request.headers
+    print("ESTA LLEGANDO ACA")
     if usuario.validate_pass(request.get_json().get("password")):
         access_token = create_access_token(identity=usuario)
         data = {

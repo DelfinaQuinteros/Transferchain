@@ -1,6 +1,6 @@
 from flask import request, jsonify, Blueprint
 from main.models import Cars
-from main import db
+from main import db, csrf
 from main.repositories import CarsRepository
 
 cars = Blueprint('cars', __name__)
@@ -9,6 +9,7 @@ car = {}
 
 
 @cars.route('/cars', methods=['POST'])
+@csrf.exempt
 def create_car():
     global car
     car = request.get_json()

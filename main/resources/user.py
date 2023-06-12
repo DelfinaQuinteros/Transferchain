@@ -1,18 +1,14 @@
-import jwt
-from flask_login import login_user, current_user, logout_user, login_required
-import json
+from flask_jwt_extended import create_access_token
+from flask_login import current_user, login_required, login_user, logout_user, LoginManager
 from datetime import datetime
 import bcrypt as bcrypt
-import requests
 from algosdk import account, mnemonic
-from flask import request, jsonify, Blueprint, flash, render_template, current_app, make_response, redirect, url_for
-from ..forms.register_form import RegisterForm
-from ..forms.login_form import LoginForm
-
+from flask import request, jsonify, Blueprint, render_template, redirect, url_for
 from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract, algod_client
+from main.forms import LoginForm, TransferForm
 from main.models import User, Transfer, Certificate, Cars
 from main.repositories import UserRepository, TransferRepository, CertificateRepository, CarsRepository
-from main import db
+from main import db, csrf
 
 user = Blueprint('user', __name__)
 users = {}
@@ -21,148 +17,141 @@ usr_report = UserRepository()
 transfer_repo = TransferRepository()
 cars_repo = CarsRepository()
 cert_repo = CertificateRepository()
+login_manager = LoginManager()
+login_manager.login_view = 'user.login'
+
+
 
 
 @user.route('/register', methods=['POST'])
 def register():
-    form = RegisterForm()
-    if form.validate():
-        data = request.get_json()
-        hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    data = request.get_json()
+    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
-        new_user = User(
-            name=data['name'],
-            last_name=data['last_name'],
-            address=data['address'],
-            dni=data['dni'],
-            email=data['email'],
-            password=hashed_password.decode('utf-8'),
-        )
+    new_user = User(
+        name=data['name'],
+        last_name=data['last_name'],
+        address=data['address'],
+        dni=data['dni'],
+        email=data['email'],
+        password=hashed_password.decode('utf-8'),
+    )
 
-        # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
-        new_address = account.generate_account()
-        new_user.algorand_private_key = new_address[0]
-        new_user.algorand_address = new_address[1]
-        new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
+    # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
+    new_address = account.generate_account()
+    new_user.algorand_private_key = new_address[0]
+    new_user.algorand_address = new_address[1]
+    new_user.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
 
-        usr_report.create(new_user)
+    usr_report.create(new_user)
 
-        return jsonify({'message': 'Usuario creado correctamente.'}), 201
-    else:
-        flash('Usuario no creado, verifique los datos ingresados.', 'danger')
-    return render_template('register.html', form=form)
+    return jsonify({'message': 'Usuario creado correctamente.'}), 201
+
+# Definir un formulario para el inicio de sesión
 
 
 @user.route('/login', methods=['GET', 'POST'])
+@csrf.exempt
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        print("CSRF Token:", form.csrf_token.data)
-        data = {"email": form.email.data, "password": form.password.data}
-        headers = {"content-type": "application/json"}
-        print("DATA", data)
-        r = requests.post(
-            current_app.config["API_URL"] + '/auth/login',
-            headers=headers,
-            data=json.dumps(data))
-        if r.status_code == 200:
-            user_data = json.loads(r.text)
-            req = make_response(render_template('profile.html'))
-            req.set_cookie('access_token', user_data.get("access_token"), httponly=True)
-            return req
-
+        email = form.email.data
+        password = form.password.data
+        if email and password:
+            user = usr_report.find_by_email(email)
+            if user:
+                login_user(user)
+                access_token = create_access_token(identity=user.id)
+                response = redirect(url_for('user.profile'))
+                response.headers['Authorization'] = 'Bearer ' + access_token
+                return response
+            else:
+                return render_template('login.html', error='Usuario o contraseña incorrectos')
         else:
-            flash('Usuario o contraseña incorrecta', 'danger')
+            return render_template('login.html', error='Usuario o contraseña incorrectos')
+
     return render_template('login.html', form=form)
 
 
-@user.route('/profile', methods=['GET'])
-def profile():
-    return render_template('profile.html')
 
-
-@user.route('/transfer-car', methods=['POST', 'GET'])
+@user.route('/transfer', methods=['POST', 'GET'])
+@csrf.exempt
 def transfer_car():
-    data = request.get_json()
-    owner = data['owner']
-    new_owner = data['new_owner']
-    car_id = data['car_id']
-    sender = User.query.get(owner)
-    recipient = User.query.get(new_owner)
-    car_id = Cars.query.get(car_id)
+    form = TransferForm()
+    print(form.errors)
+    print(form.data)
+    print(form.validate_on_submit())
 
-    # Verificar que el remitente sea el propietario actual del automóvil
-    if sender.id != car_id.user_id:
-        return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
+    if form.validate_on_submit():
+        print('validado')
+        owner = form.owner.data
+        new_owner = form.new_owner.data
+        car_id = form.car_id.data
+        sender = User.query.get(owner)
+        recipient = User.query.get(new_owner)
+        car = Cars.query.get(car_id)
 
-    # Crear y firmar la transacción de Algorand
-    try:
-        contr = contract()
-        sender_mnemonic = sender.algorand_mnemonic
-        algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
-        signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
-    except:
-        return jsonify({'error': 'No tiene fondos suficientes para realizar la transaccion'}), 400
+        print("DATA", owner, new_owner, car_id)
+        # Verificar que el remitente sea el propietario actual del automóvil
+        if sender.id != car.user_id:
+           return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
 
-    # Enviar la transacción de Algorand
-    txid = send_algorand_txn(signed_txn)
+        # Crear y firmar la transacción de Algorand
+        try:
+            contr = contract()
+            sender_mnemonic = sender.algorand_mnemonic
+            algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
+            signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+        except:
+            return jsonify({'error': 'No tiene fondos suficientes para realizar la transacción'}), 400
 
-    cars = Cars(
-        user_id=new_owner,
-        brand=car_id.brand,
-        model=car_id.model,
-        year=car_id.year,
-    )
-    cars_repo.update(cars)
-    cars_repo.delete(car_id.id)
+        # Enviar la transacción de Algorand
+        txid = send_algorand_txn(signed_txn)
 
-    sender = User.query.get(owner)
-    recipient = User.query.get(new_owner)
-    car = Cars.query.get(car_id)
+        print("TXID", txid)
 
-    # Registrar la transferencia en la base de datos
-    transfer = Transfer(
-        owner=owner,
-        new_owner=new_owner,
-        car_id=cars.id,
-    )
-    transfer_repo.create(transfer)
+        cars = Cars(
+                user_id=new_owner,
+                brand=car.brand,
+                model=car.model,
+                year=car.year,
+            )
+        cars_repo.update(cars)
+        cars_repo.delete(car.id)
 
-    # Registrar el certificado de la transferencia en la base de datos
-    certificate = Certificate(
-        transfer_id=transfer.id,
-        owner=owner,
-        new_owner=new_owner,
-        timestamp=datetime.utcnow(),
-        transaction_id_algorand=txid
-    )
-    db.session.add(certificate)
-    db.session.commit()
+        # Registrar la transferencia en la base de datos
+        transfer = Transfer(
+                owner=owner,
+                new_owner=new_owner,
+                car_id=cars.id,
+        )
+        transfer_repo.create(transfer)
 
-    return jsonify({'message': 'La transferencia se realizó con éxito'}), 200
+        print("TRANSFER", transfer.id)
 
+        # Registrar el certificado de la transferencia en la base de datos
+        certificate = Certificate(
+            transfer_id=transfer.id,
+            owner=owner,
+            new_owner=new_owner,
+            timestamp=datetime.utcnow(),
+            transaction_id_algorand=txid
+        )
+        db.session.add(certificate)
+        db.session.commit()
+        return redirect(url_for('user.profile'))
 
-@user.route('/mytransfers/<owner>', methods=['GET'])
-def get_my_transfers(owner):
-    try:
-        transfers = transfer_repo.find_by_owner(owner)
-        owner = User.query.get(owner)
-        trans = owner.to_json()
-        new_owner = User.query.get(transfers.new_owner).to_json()
-        return jsonify(transfers.to_json(), trans, new_owner), 200
-    except AttributeError:
-        return jsonify({'Error': 'No tiene transferencias'}), 400
+    return render_template('create_transfer.html', form=form)
 
 
-@user.route('/mycars/<user_id>', methods=['GET'])
-def get_my_cars(user_id):
-    cars = Cars.query.filter_by(user_id=user_id).all()
-    return jsonify(cars), 200
 
 
-@user.route('/mycertificates/<transfer_id>', methods=['GET'])
-def get_my_certificates(transfer_id):
-    certificates = cert_repo.find_by_id(id=transfer_id)
-    owner = User.query.get(certificates.owner).to_json()
-    new_owner = User.query.get(certificates.new_owner).to_json()
-    return jsonify(certificates.to_json(), owner, new_owner), 200
+@user.route('/profile')
+@login_required
+def profile():
+    user = User.query.get(current_user.id)
+    transfers = Transfer.query.filter((Transfer.owner == user.id) | (Transfer.new_owner == user.id)).all()
+    certificates = Certificate.query.filter_by(owner=user.id).all()
+    cars = Cars.query.filter(Cars.owner.has(id=user.id)).all()
+    return render_template('profile.html', user=user, transfers=transfers, certificates=certificates, cars=cars)
+

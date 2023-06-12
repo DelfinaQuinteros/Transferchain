@@ -14,11 +14,6 @@ def index():
     return render_template('index.html')
 
 
-@home.route('/profile')
-def profile():
-    return render_template('profile.html')
-
-
 @home.get("/account")
 def create_account():
     private_key, address = account.generate_account()

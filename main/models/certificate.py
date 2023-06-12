@@ -27,6 +27,8 @@ class Certificate(db.Model):
     owner = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     transaction_id_algorand = db.Column(db.String(64), nullable=False)
+    new_owner_user = db.relationship('User', foreign_keys=[new_owner], backref='new_owner_certificates')
+    owner_user = db.relationship('User', foreign_keys=[owner], backref='owner_certificates')
 
     def __repr__(self):
         return f"<Certificate {self.id} {self.transfer_id} {self.new_owner} {self.owner} {self.timestamp} {self.transaction_id_algorand}>"
