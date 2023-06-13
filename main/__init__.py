@@ -28,11 +28,9 @@ def create_app():
     csrf.init_app(app)
     db.init_app(app)
     from main.resources import user, home, cars
-    from main.auth import auth
     app.register_blueprint(home, url_prefix='/')
     app.register_blueprint(user, url_prefix='/')
     app.register_blueprint(cars, url_prefix='/')
-    app.register_blueprint(auth, url_prefix='/auth')
 
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES'))
