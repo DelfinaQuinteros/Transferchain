@@ -9,6 +9,9 @@ WORKDIR /app
 
 COPY . .
 
+RUN apk add --no-cache libffi-dev, openssl-dev, gcc, libc-dev, make
+
+
 RUN /usr/local/bin/python -m pip install --upgrade pip
 
 RUN pip install -r requirements.txt
