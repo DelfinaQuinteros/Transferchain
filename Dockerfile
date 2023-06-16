@@ -1,5 +1,5 @@
 # Utilizar una imagen base de Python
-FROM python:3.8-alpine3.15
+FROM python:3.8-buster
 
 # Instalar las herramientas de compilación necesarias
 RUN apk add --no-cache build-base
@@ -8,9 +8,6 @@ RUN apk add --no-cache build-base
 WORKDIR /app
 
 COPY . .
-
-RUN apk add --no-cache libffi-dev, openssl-dev, gcc, libc-dev, make
-
 
 RUN /usr/local/bin/python -m pip install --upgrade pip
 
