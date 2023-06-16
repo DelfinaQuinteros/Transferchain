@@ -7,6 +7,7 @@ WORKDIR /app
 COPY . .
 
 RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN apt-get update && apt-get install -y build-essential
 
 RUN pip install -r requirements.txt
 
