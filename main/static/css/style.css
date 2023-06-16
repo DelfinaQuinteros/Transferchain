@@ -45,47 +45,122 @@
     z-index: 2;
     cursor: pointer;
 }
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+    border-radius: 4px;
+}
 
+.mdc-text-field--outlined .mdc-notched-outline__leading {
+    border-width: 1px;
+}
+
+.mdc-text-field--outlined .mdc-notched-outline__trailing {
+    border-width: 1px;
+}
+
+.mdc-text-field--outlined .mdc-notched-outline__notch {
+    padding: 0;
+}
+
+.mdc-text-field--outlined .mdc-floating-label {
+    transform: translate(12px, 12px) scale(1);
+}
+
+.mdc-text-field--outlined .mdc-floating-label--float-above {
+    transform: translate(8px, -6px) scale(0.75);
+}
+
+.mdc-text-field--outlined .mdc-text-field__input {
+    padding: 10px 12px;
+}
 #logoSkoy{
     width: 100px;
 }
 
-    body {
-      font-family: Arial, sans-serif;
-    }
+body {
+  font-family: Arial, sans-serif;
+  background-color: #faf8f7;
+}
 
-    .container {
-      max-width: 800px;
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+h1, h2, h3 {
+  text-align: center;
+}
+
+.card {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card p {
+  margin-bottom: 10px;
+}
+
+.new-transfer-button {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.new-transfer-button .btn {
+  width: 180px;
+  height: 60px;
+  font-size: 18px;
+  background-color: #ff7c39;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.new-transfer-button .btn:hover {
+  background-color: #ff5722;
+}
+
+body.dark-mode {
+  background-color: #333;
+  color: #fff;
+}
+
+.dark-mode .container {
+  background-color: #444;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .card {
+  background-color: #555;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+    .profile-picture {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #f2f2f2;
       margin: 0 auto;
-      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    /* Estilos de las tarjetas de transferencia */
-    .transfer-card {
-      background-color: #f2f2f2;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .transfer-card h3 {
-      margin-top: 0;
-    }
-
-    .transfer-card p {
-      margin-bottom: 10px;
-    }
-
-    /* Estilos de las tarjetas de certificados */
-    .certificate-card {
-      background-color: #f2f2f2;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .certificate-card h3 {
-      margin-top: 0;
-    }
-
-    .certificate-card p {
-      margin-bottom: 10px;
+    .profile-picture img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }

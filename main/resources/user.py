@@ -3,7 +3,7 @@ from flask_login import current_user, login_required, login_user, logout_user, L
 from datetime import datetime
 import bcrypt as bcrypt
 from algosdk import account, mnemonic
-from flask import request, jsonify, Blueprint, render_template, redirect, url_for
+from flask import request, jsonify, Blueprint, render_template, redirect, url_for, flash
 from main.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, contract, algod_client
 from main.forms import LoginForm, TransferForm
 from main.models import User, Transfer, Certificate, Cars
@@ -19,8 +19,6 @@ cars_repo = CarsRepository()
 cert_repo = CertificateRepository()
 login_manager = LoginManager()
 login_manager.login_view = 'user.login'
-
-
 
 
 @user.route('/register', methods=['POST'])
@@ -47,8 +45,6 @@ def register():
 
     return jsonify({'message': 'Usuario creado correctamente.'}), 201
 
-# Definir un formulario para el inicio de sesión
-
 
 @user.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
@@ -66,9 +62,9 @@ def login():
                 response.headers['Authorization'] = 'Bearer ' + access_token
                 return response
             else:
-                return render_template('login.html', error='Usuario o contraseña incorrectos')
+                return render_template('login.html', error='Usuario o contraseña incorrectos'), flash('Usuario o contraseña incorrectos')
         else:
-            return render_template('login.html', error='Usuario o contraseña incorrectos')
+            return render_template('login.html', error='Usuario o contraseña incorrectos'), flash('Usuario o contraseña incorrectos')
 
     return render_template('login.html', form=form)
 
@@ -76,25 +72,37 @@ def login():
 
 @user.route('/transfer', methods=['POST', 'GET'])
 @csrf.exempt
+@login_required
 def transfer_car():
     form = TransferForm()
+    owner_id = User.query.get(current_user.id).id
+    print(owner_id)
     print(form.errors)
     print(form.data)
-    print(form.validate_on_submit())
-
     if form.validate_on_submit():
         print('validado')
-        owner = form.owner.data
+        owner = owner_id
         new_owner = form.new_owner.data
         car_id = form.car_id.data
         sender = User.query.get(owner)
         recipient = User.query.get(new_owner)
         car = Cars.query.get(car_id)
 
-        print("DATA", owner, new_owner, car_id)
+        print(sender.id)
+        print(car.user_id)
+        print(recipient.id)
+
+        # Verificar que el auto exista
+        if not car:
+            flash('El automóvil no existe', 'danger')
+
+        # Verificar que el nuevo propietario exista
+        if not recipient:
+            flash('El nuevo propietario no existe', 'danger')
+
         # Verificar que el remitente sea el propietario actual del automóvil
         if sender.id != car.user_id:
-           return jsonify({'error': 'El remitente no es el propietario actual del automóvil'}), 400
+           flash('El remitente no es el propietario actual del automóvil', 'danger')
 
         # Crear y firmar la transacción de Algorand
         try:
@@ -103,12 +111,11 @@ def transfer_car():
             algo_txn = create_algorand_txn(sender.algorand_address, recipient.algorand_address)
             signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
         except:
-            return jsonify({'error': 'No tiene fondos suficientes para realizar la transacción'}), 400
+            flash('No se pudo crear la transacción de Algorand', 'danger')
 
         # Enviar la transacción de Algorand
         txid = send_algorand_txn(signed_txn)
 
-        print("TXID", txid)
 
         cars = Cars(
                 user_id=new_owner,
@@ -119,7 +126,6 @@ def transfer_car():
         cars_repo.update(cars)
         cars_repo.delete(car.id)
 
-        # Registrar la transferencia en la base de datos
         transfer = Transfer(
                 owner=owner,
                 new_owner=new_owner,
@@ -127,9 +133,6 @@ def transfer_car():
         )
         transfer_repo.create(transfer)
 
-        print("TRANSFER", transfer.id)
-
-        # Registrar el certificado de la transferencia en la base de datos
         certificate = Certificate(
             transfer_id=transfer.id,
             owner=owner,
@@ -139,10 +142,9 @@ def transfer_car():
         )
         db.session.add(certificate)
         db.session.commit()
+
         return redirect(url_for('user.profile'))
-
-    return render_template('create_transfer.html', form=form)
-
+    return render_template('create_transfer.html', form=form, owner_id=owner_id)
 
 
 

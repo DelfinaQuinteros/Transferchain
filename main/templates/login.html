@@ -3,7 +3,7 @@
 
 {% block head %}
     {{ super() }}
-<title xmlns="http://www.w3.org/1999/html">Login</title>
+    <title xmlns="http://www.w3.org/1999/html">Login</title>
     <link rel="stylesheet" href="static/css/style.css">
 {% endblock %}
 
@@ -28,17 +28,16 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="text-center">Bienvenido a Transferchain</h1>
-                    <br><br>
                 </div>
             </div>
             <form method="POST" action="/login">
                 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                     {{ form.csrf_token }}
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <label class="mdc-text-field mdc-text-field--outlined w-100">
-                                <span class = "mdc-text-field__ripple"></span>
-                                {{mostrarcampo(form.email, class="mdc-text-field__input")}}
+                <div class="row mt-3 justify-content-center">
+                    <div class="col-lg-8">
+                            <label class="mdc-text-field mdc-text-field--outlined w-100 align-items-center" >
+
+                                {{ mostrarcampo(form.email) }}
                                 <span class="material-icons-outlined mdc-text-field__icon mdc-text-field__icon--trailing">
                                     face
                                 </span>
@@ -48,30 +47,26 @@
                     </div>
 
                     <!-- row 2 -->
-                        <div class="row mt-3">
-                            <div class="col-lg-12">
-                                <label class="mdc-text-field mdc-text-field--outlined w-100 text-field-pass">
-
-                                     {{ mostrarcampo(form.password, class="mdc-text-field__input toggle-password") }}
-                                    <!-- ICON EYE -->
-                                    <span id="icon-view-pass2">
-                                        <span class="material-icons-outlined mdc-text-field__icon mdc-text-field__icon--trailing">
-                                            visibility_off
-                                        </span>
+                    <div class="row mt-3 justify-content-center">
+                        <div class="col-lg-8">
+                            <label class="mdc-text-field mdc-text-field--outlined w-100 text-field-pass align-items-center">
+                                {{ mostrarcampo(form.password) }}
+                                <!-- ICON EYE -->
+                                <span id="icon-view-pass2" class="mdc-text-field__icon mdc-text-field__icon--trailing ">
+                                    <span class="material-icons-outlined">
+                                        visibility_off
                                     </span>
-                                </label>
-                            </div>
+                                </span>
+                            </label>
+                        </div>
                         <br><br>
                         <br><br>
                     </div>
 
-                <!-- row 2 -->
+                    <!-- row 2 -->
                     <div class="row">
                         <div class="col-lg-12">
-                            {{mostrarenvio(form.submit, class="btn btnLogin w-100 rounded-pill")}}
-
-                            <p class="mt-2 text-center link-custom">¿No tiene una cuenta? <a href="#" class="text-primario">Abrir cuenta</a>
-                            </p>
+                            {{ mostrarenvio(form.submit, class="btn btnLogin w-100 rounded-pill") }}
                         </div>
                     </div>
                 </form>
