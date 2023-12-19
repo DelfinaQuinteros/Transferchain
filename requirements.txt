@@ -1,5 +1,4 @@
 pyteal==0.10.1
-py-algorand-sdk==2.1.0
 
 fastapi==0.95.1
 python-dotenv==1.0.0

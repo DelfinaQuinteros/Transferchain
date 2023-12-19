@@ -1,0 +1,11 @@
+export PORT=5000
+export DATABASE_NAME='transferchain'
+export DATABASE_PORT=3306
+export DATABASE_URL='127.0.0.1'
+export DATABASE_USER='root'
+export DATABASE_PASSWORD='delfi123'
+export SECRET_KEY='aaaaaaaaaaaaa121321315321'
+export API_URL = 'http://127.0.0.1:5555'
+
+export JWT_SECRET_KEY = 'tesiss'
+export JWT_ACCESS_TOKEN_EXPIRES = 3600

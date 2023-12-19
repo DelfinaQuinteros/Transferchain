@@ -46,6 +46,7 @@ def register():
     return jsonify({'message': 'Usuario creado correctamente.'}), 201
 
 
+
 @user.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
 def login():
@@ -76,11 +77,7 @@ def login():
 def transfer_car():
     form = TransferForm()
     owner_id = User.query.get(current_user.id).id
-    print(owner_id)
-    print(form.errors)
-    print(form.data)
     if form.validate_on_submit():
-        print('validado')
         owner = owner_id
         new_owner = form.new_owner.data
         car_id = form.car_id.data
@@ -88,23 +85,15 @@ def transfer_car():
         recipient = User.query.get(new_owner)
         car = Cars.query.get(car_id)
 
-        print(sender.id)
-        print(car.user_id)
-        print(recipient.id)
-
-        # Verificar que el auto exista
         if not car:
             flash('El automóvil no existe', 'danger')
 
-        # Verificar que el nuevo propietario exista
         if not recipient:
             flash('El nuevo propietario no existe', 'danger')
 
-        # Verificar que el remitente sea el propietario actual del automóvil
         if sender.id != car.user_id:
            flash('El remitente no es el propietario actual del automóvil', 'danger')
 
-        # Crear y firmar la transacción de Algorand
         try:
             contr = contract()
             sender_mnemonic = sender.algorand_mnemonic
@@ -113,9 +102,7 @@ def transfer_car():
         except:
             flash('No se pudo crear la transacción de Algorand', 'danger')
 
-        # Enviar la transacción de Algorand
         txid = send_algorand_txn(signed_txn)
-
 
         cars = Cars(
                 user_id=new_owner,
@@ -142,7 +129,6 @@ def transfer_car():
         )
         db.session.add(certificate)
         db.session.commit()
-
         return redirect(url_for('user.profile'))
     return render_template('create_transfer.html', form=form, owner_id=owner_id)
 
@@ -156,4 +142,5 @@ def profile():
     certificates = Certificate.query.filter_by(owner=user.id).all()
     cars = Cars.query.filter(Cars.owner.has(id=user.id)).all()
     return render_template('profile.html', user=user, transfers=transfers, certificates=certificates, cars=cars)
+
 

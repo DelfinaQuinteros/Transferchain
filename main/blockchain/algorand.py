@@ -29,16 +29,14 @@ def send_algorand_txn(signed_txn):
 
 def contract():
     contract_teal_code = ("""
-     // Definir las variables del contrato
-     int user.id
+     int owner
      str brand
      str model
      int year
 
-     // Verificar los datos
      // Compara los datos recibidos con los almacenados en el contrato
      int verifyData:
-         user.id = Txn.application_args[0]
+         owner = Txn.application_args[0]
          brand = Txn.application_args[1]
          model = Txn.application_args[2]
          year = Txn.application_args[3]
@@ -77,7 +75,6 @@ def contract():
 
      // Programa principal del contrato
      main:
-         // Ejecutar la lógica de ejecución del contrato
          return txn_accept
      """)
     return contract_teal_code
