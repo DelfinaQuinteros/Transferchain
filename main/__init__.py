@@ -21,7 +21,10 @@ def create_app():
     login_manager.init_app(app)
     # Configuracion de la conexion a la base de datos
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:C14CaDDg55111Bd11fbG3Hdec2dhAgCA@viaduct.proxy.rlwy.net:43232/railway'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://' + os.getenv('DATABASE_USER') + ':' + os.getenv(
+        'DATABASE_PASSWORD') \
+                                            + '@' + os.getenv('DATABASE_URL') + ':' + os.getenv('DATABASE_PORT') \
+                                            + '/' + os.getenv('DATABASE_NAME')
     csrf.init_app(app)
     db.init_app(app)
     from main.resources import user, home, cars
