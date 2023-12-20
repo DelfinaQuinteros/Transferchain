@@ -2,10 +2,11 @@ import os
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from flask import Flask, jsonify, json
 from dotenv import load_dotenv
 import pymysql
 from flask_wtf.csrf import CSRFProtect
+
 
 pymysql.install_as_MySQLdb()
 db = SQLAlchemy()
@@ -34,6 +35,7 @@ def create_app():
 
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES'))
+    app.json_encoder = json.JSONEncoder
     jwt.init_app(app)
 
     return app

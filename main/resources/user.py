@@ -10,6 +10,7 @@ from main.models import User, Transfer, Certificate, Cars
 from main.repositories import UserRepository, TransferRepository, CertificateRepository, CarsRepository
 from main import db, csrf
 
+
 user = Blueprint('user', __name__)
 users = {}
 cars = {}
