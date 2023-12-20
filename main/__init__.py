@@ -2,10 +2,9 @@ import os
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, json
+from flask import Flask
 from dotenv import load_dotenv
 import pymysql
-from flask.json import JSONEncoder
 from flask_wtf.csrf import CSRFProtect
 
 
@@ -19,7 +18,6 @@ login_manager = LoginManager()
 
 def create_app():
     app = Flask(__name__)
-    app.json_encoder = JSONEncoder
     app.config['SECRET_KEY'] = 'aaaaaaaaaaaaa121321315321'
     load_dotenv()
     login_manager.init_app(app)

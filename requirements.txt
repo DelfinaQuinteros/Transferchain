@@ -1,5 +1,4 @@
 pyteal==0.10.1
-
 fastapi==0.95.1
 python-dotenv==1.0.0
 Flask==2.3.2
