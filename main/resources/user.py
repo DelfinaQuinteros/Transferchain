@@ -22,6 +22,7 @@ login_manager.login_view = 'user.login'
 
 
 @user.route('/register', methods=['POST'])
+@csrf.exempt
 def register():
     data = request.get_json()
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
