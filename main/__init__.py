@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 import pymysql
 from flask_wtf.csrf import CSRFProtect
 
-
-
 pymysql.install_as_MySQLdb()
 db = SQLAlchemy()
 csrf = CSRFProtect()
