@@ -135,14 +135,25 @@ def transfer_car():
     return render_template('create_transfer.html', form=form, owner_id=owner_id)
 
 
-
 @user.route('/profile')
 @login_required
 def profile():
     user = User.query.get(current_user.id)
-    transfers = Transfer.query.filter((Transfer.owner == user.id) | (Transfer.new_owner == user.id)).all()
-    certificates = Certificate.query.filter_by(owner=user.id).all()
+
+    # Filtrar las transferencias donde el usuario es el propietario actual o anterior
+    transfers = Transfer.query.filter(
+        (Transfer.owner == user.id) | (Transfer.new_owner == user.id)
+    ).all()
+
+    # Filtrar los certificados donde el usuario es el propietario actual o anterior
+    certificates = Certificate.query.filter(
+        (Certificate.owner == user.id) | (Certificate.new_owner == user.id)
+    ).all()
+
+    # Filtrar los autos donde el usuario es el propietario
     cars = Cars.query.filter(Cars.owner.has(id=user.id)).all()
+
     return render_template('profile.html', user=user, transfers=transfers, certificates=certificates, cars=cars)
+
 
 
